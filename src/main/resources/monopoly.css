@@ -1,0 +1,99 @@
+.root {
+    color-main: #CB1111;
+    color-black: #000000;
+    color-white: #FFFFFF;
+    -fx-background-color: #000;
+}
+
+#currentLabel, #phaseLabel {
+    -fx-font-size: 14px;
+}
+
+#logArea {
+    -fx-border-color: #000;
+    -fx-border-radius: 10px;
+    -fx-padding: 10px;
+}
+
+.button {
+    -fx-background-color: color-main;
+    -fx-text-fill: color-white;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-effect: dropshadow(gaussian, #F32727, 15, 0, 0, 0);
+}
+
+.text--white {
+    -fx-text-fill: color-white;
+}
+
+.menu__item:hover,
+    .menu__item:focused {
+    -fx-background-color: color-main;
+    -fx-cursor: hand;
+}
+
+#logArea {
+    -fx-font-size: 16px;
+}
+
+.menu,
+.menu:hover,
+.menu:focused,
+.menu:showing,
+.menu:disabled {
+    -fx-cursor: hand;
+}
+
+.block {
+    -fx-background-color: color-black;
+    -fx-border-color: color-black;
+}
+
+.monopoly-menu {
+    -fx-selection-bar-non-focused: color-white;
+    -fx-selection-bar-focused: color-white;
+    -fx-selection-bar: color-white;
+    -fx-accent: color-white;
+}
+
+.monopoly-menu__button--accept {
+    -fx-background-color: #27ae60;
+}
+
+.monopoly-menu__button--decline {
+    -fx-background-color: color-main;
+}
+
+.die {
+    -fx-background-color: color-white;
+    -fx-border-color: color-black;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-font-size: 48px;
+    -fx-padding: 0;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-font-family: 'Segoe UI Symbol', 'DejaVu Sans', sans-serif;
+    -fx-opacity: 0;
+}
+
+.badge {
+    -fx-background-color: color-white;
+    -fx-border-color: color-black;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-font-size: 36px;
+    -fx-padding: 16 24 16 24;
+}
+
+.stars-badge {
+    -fx-background-color: rgba(0,0,0,0.65);
+    -fx-text-fill: gold;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-padding: 2 4 2 4;
+    -fx-background-radius: 6;
+}

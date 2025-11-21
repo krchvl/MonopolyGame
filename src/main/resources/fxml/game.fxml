@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.krchvl.MonopolyGame.fx.GameController"
+            stylesheets="@/monopoly.css">
+
+    <top>
+        <VBox spacing="6">
+            <children>
+                <MenuBar styleClass="menu-bar">
+                    <menus>
+                        <Menu styleClass="menu" text="Игра">
+                            <items>
+                                <MenuItem styleClass="menu__item" text="Новая" onAction="#onRestart"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem styleClass="menu__item" text="Выход" onAction="#onExit"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+
+                <HBox styleClass="mainPanel" spacing="12" alignment="CENTER_LEFT">
+                    <children>
+                        <Label styleClass="text--white" text="Игроки:"/>
+                        <Label styleClass="text--white" fx:id="playersLabel" text="-"/>
+                    </children>
+                    <padding>
+                        <Insets top="6" right="10" bottom="0" left="10"/>
+                    </padding>
+                </HBox>
+
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <children>
+                        <Label styleClass="text--white" text="Текущий:"/>
+                        <Label styleClass="text--white" fx:id="currentLabel" text="-"/>
+                        <Label styleClass="text--white" text="Фаза:"/>
+                        <Label styleClass="text--white" fx:id="phaseLabel" text="-"/>
+                    </children>
+                    <padding>
+                        <Insets top="0" right="10" bottom="8" left="10"/>
+                    </padding>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.65">
+            <items>
+                <!-- Круговое поле -->
+                <StackPane fx:id="boardRoot" style="-fx-background-color: radial-gradient(center 50% 50%, radius 65%, #f9fff9, #e6ffe6);">
+                    <children>
+                        <Pane fx:id="boardPane" />
+                    </children>
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                </StackPane>
+
+                <!-- Лог справа -->
+                <VBox styleClass="block" spacing="6">
+                    <children>
+                        <Label styleClass="text--white" text="Лог"/>
+                        <TextArea fx:id="logArea" editable="false" wrapText="true"/>
+                    </children>
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="0"/>
+                    </padding>
+                </VBox>
+            </items>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="10">
+            <children>
+                <Button styleClass="button" fx:id="rollBtn" text="Бросить" onAction="#onRollDice"/>
+                <Button styleClass="button" fx:id="buyBtn" text="Купить" onAction="#onBuyProperty"/>
+                <Button styleClass="button" fx:id="passBtn" text="Пас" onAction="#onPassPurchase"/>
+                <Region HBox.hgrow="ALWAYS"/>
+            </children>
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </HBox>
+    </bottom>
+
+</BorderPane>
