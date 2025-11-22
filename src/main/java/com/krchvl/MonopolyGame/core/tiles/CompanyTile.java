@@ -14,8 +14,6 @@ public class CompanyTile extends Tile implements CompanyLike {
 
     private int stars = 0;
 
-    private static final double STAR_RENT_BONUS = 0.50;
-
     public CompanyTile(String name, String imgSrc, int price, int baseRent, CompanyTileGroup group) {
         super(name, imgSrc);
         this.price = price;
@@ -44,13 +42,22 @@ public class CompanyTile extends Tile implements CompanyLike {
         boolean hasMonopoly = (ownedInGroup == totalInGroup) && totalInGroup > 1
                 && group != CompanyTileGroup.RED && group != CompanyTileGroup.BROWN;
 
-        int rent = hasMonopoly ? baseRent * 2 : baseRent;
+        int currentRent = hasMonopoly ? baseRent * 2 : baseRent;
 
         if (stars > 0) {
-            double multiplier = 1.0 + STAR_RENT_BONUS * stars;
-            rent = (int) Math.round(rent * multiplier);
+            double multiplier = switch (stars) {
+                case 1 -> 3.0;
+                case 2 -> 8.0;
+                case 3 -> 20.0;
+                case 4 -> 45.0;
+                case 5 -> 80.0;
+                default -> 1.0 + (stars * 2.0);
+            };
+
+            currentRent = (int) (currentRent * multiplier);
         }
-        return Math.max(0, rent);
+
+        return Math.max(0, currentRent);
     }
 
     public int getPrice() { return price; }
