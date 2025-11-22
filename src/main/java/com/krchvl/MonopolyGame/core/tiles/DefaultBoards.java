@@ -5,7 +5,6 @@ import com.krchvl.MonopolyGame.core.Board;
 public final class DefaultBoards {
     private DefaultBoards() {}
 
-    // Упрощённая классическая доска (~20 клеток). Расширить до 40 — добавьте оставшиеся.
     public static Board sampleClassicLikeBoard() {
         Board b = new Board();
         b.setGoIndex(0);
@@ -35,6 +34,18 @@ public final class DefaultBoards {
         b.addTile(new CompanyTile("Rostic's", "/images/companies/rostics.png", 180, 14, CompanyTileGroup.ORANGE));
         b.addTile(new JailTile("Тюрьма"));
         b.addTile(new CompanyTile("Перекрёсток", "/images/companies/perekrestok.png", 180, 14, CompanyTileGroup.PINK));
+        return b;
+    }
+
+    public static Board testStarsBoard() {
+        Board b = new Board();
+        b.setGoIndex(0);
+
+        b.addTile(new CompanyTile("Сбербанк", "/images/companies/sberbank.png", 60, 4, CompanyTileGroup.GREEN));
+        b.addTile(new CompanyTile("Магнит", "/images/companies/magnit.png", 180, 12, CompanyTileGroup.PINK));
+        b.addTile(new CompanyTile("Лукойл", "/images/companies/lukoil.png", 200, 16, CompanyTileGroup.YELLOW));
+        b.addTile(new CompanyTile("Rostic's", "/images/companies/rostics.png", 180, 14, CompanyTileGroup.ORANGE));
+
         return b;
     }
 }
