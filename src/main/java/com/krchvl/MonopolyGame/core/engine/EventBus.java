@@ -1,13 +1,13 @@
 package com.krchvl.MonopolyGame.core.engine;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public class EventBus {
-    private final Map<Class<?>, List<Consumer<?>>> listeners = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<Consumer<?>>> listeners = new HashMap<>();
 
     public <T> void on(Class<T> type, Consumer<T> handler) {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(handler);

@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameEngine implements GameContext {
-
     public enum Phase {
         AWAITING_ROLL,
         AWAITING_BUY_DECISION,
@@ -29,6 +28,8 @@ public class GameEngine implements GameContext {
     private final Map<Player, PlayerController> controllers;
     private final EventBus bus;
     private final Dice dice = new Dice();
+
+    private final Set<CompanyTile> upgradedInCurrentTurn = new HashSet<>();
 
     private int currentIndex = 0;
     private int round = 1;
@@ -120,6 +121,8 @@ public class GameEngine implements GameContext {
             return;
         }
 
+        if (phase == Phase.GAME_OVER) return;
+
         phase = (isDouble && !p.isInJail()) ? Phase.AWAITING_ROLL_AGAIN : Phase.AWAITING_END_TURN;
     }
 
@@ -132,13 +135,17 @@ public class GameEngine implements GameContext {
             p.releaseFromJail();
             publish(new LogEvent("Дубль! " + p.getName() + " выходит из тюрьмы."));
             moveAndLand(p, roll.sum(), roll);
+            if (phase == Phase.GAME_OVER || p.isBankrupt()) {
+                if (phase != Phase.GAME_OVER) phase = Phase.AWAITING_END_TURN;
+                return;
+            }
             phase = (pendingPurchase != null) ? Phase.AWAITING_BUY_DECISION : Phase.AWAITING_END_TURN;
         } else {
             p.incrementJailTurns();
             if (p.getJailTurns() >= 3) {
                 if (safePay(p, 50, null)) {
                     p.releaseFromJail();
-                    publish(new LogEvent(p.getName() + " платит $50 и выходит из тюрьмы."));
+                    publish(new LogEvent(p.getName() + " платит $50K и выходит из тюрьмы."));
                     moveAndLand(p, roll.sum(), roll);
                     phase = (pendingPurchase != null) ? Phase.AWAITING_BUY_DECISION : Phase.AWAITING_END_TURN;
                 } else {
@@ -152,6 +159,13 @@ public class GameEngine implements GameContext {
     }
 
     private void proceedAfterLanding() {
+        if (phase == Phase.GAME_OVER) return;
+
+        if (current().isBankrupt()) {
+            phase = Phase.AWAITING_END_TURN;
+            return;
+        }
+
         if (lastRoll != null && lastRoll.isDouble() && !current().isInJail()) {
             phase = Phase.AWAITING_ROLL_AGAIN;
         } else {
@@ -165,7 +179,7 @@ public class GameEngine implements GameContext {
 
         if (newPos < oldPos) {
             p.receive(GO_REWARD);
-            publish(new LogEvent(p.getName() + " проходит 'Старт' +$" + GO_REWARD));
+            publish(new LogEvent(p.getName() + " проходит 'Старт' +$" + GO_REWARD + "K"));
         }
 
         p.setPosition(newPos);
@@ -178,12 +192,11 @@ public class GameEngine implements GameContext {
     }
 
     private void nextPlayer() {
+        if (phase == Phase.GAME_OVER) return;
+
         List<Player> alive = alivePlayers();
         if (alive.size() <= 1) {
-            if (alive.size() == 1) {
-                publish(new GameOver(alive.get(0)));
-            }
-            phase = Phase.GAME_OVER;
+            checkGameOver();
             return;
         }
 
@@ -193,6 +206,9 @@ public class GameEngine implements GameContext {
 
         doublesInRow = 0;
         lastRoll = null;
+
+        upgradedInCurrentTurn.clear();
+
         phase = Phase.AWAITING_ROLL;
         round++;
         publish(new TurnStarted(current(), round));
@@ -229,9 +245,13 @@ public class GameEngine implements GameContext {
     }
 
     private void checkGameOver() {
+        if (phase == Phase.GAME_OVER) return;
+
         List<Player> alive = alivePlayers();
-        if (alive.size() == 1) {
-            publish(new GameOver(alive.get(0)));
+        if (alive.size() <= 1) {
+            if (alive.size() == 1) {
+                publish(new GameOver(alive.get(0)));
+            }
             phase = Phase.GAME_OVER;
         }
     }
@@ -264,7 +284,7 @@ public class GameEngine implements GameContext {
     public int calcTileUpgradeCost(CompanyTile tile) {
         int next = tile.getStars() + 1;
         if (next > MAX_STARS) return Integer.MAX_VALUE;
-        return Math.max(50, (int) Math.round(tile.getPrice() * 0.25 * next));
+        return Math.max(50, (int) Math.round(tile.getPrice() * 0.5 * next));
     }
 
     public boolean canUpgradeTile(Player p, CompanyTile tile) {
@@ -278,6 +298,8 @@ public class GameEngine implements GameContext {
         if (!hasMonopoly(p, tile.getGroup())) return false;
         if (tile.getStars() >= MAX_STARS) return false;
 
+        if (upgradedInCurrentTurn.contains(tile)) return false;
+
         int cost = calcTileUpgradeCost(tile);
         return p.getBalance() >= cost;
     }
@@ -290,11 +312,13 @@ public class GameEngine implements GameContext {
         }
         int cost = calcTileUpgradeCost(tile);
         if (!safePay(p, cost, null)) return;
+
         tile.setStars(tile.getStars() + 1);
+
+        upgradedInCurrentTurn.add(tile);
+
         publish(new CompanyUpgraded(p, tile, tile.getStars(), cost));
     }
-
-
 
     private int calcStarPrice(CompanyTile tile, int starIndex) {
         int base = Math.max(1, tile.getPrice() / 2);

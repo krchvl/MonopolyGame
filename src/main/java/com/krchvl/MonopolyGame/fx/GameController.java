@@ -9,6 +9,7 @@ import com.krchvl.MonopolyGame.fx.anim.DiceOverlay;
 import com.krchvl.MonopolyGame.fx.anim.MovementAnimator;
 import com.krchvl.MonopolyGame.fx.util.DiceUtils;
 import com.krchvl.MonopolyGame.fx.util.ImageCache;
+import com.krchvl.MonopolyGame.fx.util.MoneyUtils;
 import com.krchvl.MonopolyGame.fx.view.BoardView;
 import com.krchvl.MonopolyGame.fx.view.TileContextMenu;
 import javafx.animation.PauseTransition;
@@ -33,12 +34,17 @@ import static com.krchvl.MonopolyGame.fx.util.DiceUtils.dieChar;
 
 public class GameController {
 
-    @FXML private StackPane boardRoot;
-    @FXML private Pane boardPane;
+    @FXML
+    private StackPane boardRoot;
+    @FXML
+    private Pane boardPane;
 
-    @FXML private TextArea logArea;
-    @FXML private Label playersLabel, currentLabel, phaseLabel;
-    @FXML private Button rollBtn, buyBtn, passBtn;
+    @FXML
+    private TextArea logArea;
+    @FXML
+    private Label playersLabel, currentLabel, phaseLabel;
+    @FXML
+    private Button rollBtn, buyBtn, passBtn;
 
     private EventBus bus;
     private GameEngine engine;
@@ -66,8 +72,8 @@ public class GameController {
 
         List<Player> players = Arrays.asList(
                 new Player("Игрок 1", PlayerGroup.RED),
-                new Player("Bot Альберт", PlayerGroup.GREEN),
-                new Player("Bot Кирилл", PlayerGroup.LIGHT_BLUE)
+                new Player("Bot JOHN", PlayerGroup.GREEN),
+                new Player("Bot BON", PlayerGroup.LIGHT_BLUE)
         );
         Map<Player, PlayerController> controllers = new HashMap<>();
         controllers.put(players.get(0), new HumanController());
@@ -119,8 +125,8 @@ public class GameController {
         }));
 
         bus.on(CompanyUpgraded.class, e -> Platform.runLater(() -> {
-            appendLog(String.format("⭐ %s улучшает %s до уровня %d за $%d",
-                    e.player.getName(), e.tile.getName(), e.newLevel, e.cost));
+            appendLog(String.format("⭐ %s улучшает %s до уровня %d за %s",
+                    e.player.getName(), e.tile.getName(), e.newLevel, MoneyUtils.formatMoney(e.cost)));
             updatePlayersLabel();
             int idx = indexOfTile(e.tile);
             if (idx >= 0) boardView.applyStars(idx, e.newLevel);
@@ -128,8 +134,8 @@ public class GameController {
         }));
 
         bus.on(CompanyDowngraded.class, e -> Platform.runLater(() -> {
-            appendLog(String.format("🔻 %s понижает %s до уровня %d и получает $%d",
-                    e.player.getName(), e.tile.getName(), e.newLevel, e.refund));
+            appendLog(String.format("🔻 %s понижает %s до уровня %d и получает %s",
+                    e.player.getName(), e.tile.getName(), e.newLevel, MoneyUtils.formatMoney(e.refund)));
             updatePlayersLabel();
             int idx = indexOfTile(e.tile);
             if (idx >= 0) boardView.applyStars(idx, e.newLevel);
@@ -156,12 +162,12 @@ public class GameController {
         });
 
         bus.on(PurchaseOffered.class, e -> Platform.runLater(() -> {
-            appendLog("Предложение покупки: " + e.company.getName() + " за $" + e.company.getPrice());
+            appendLog("Предложение покупки: " + e.company.getName() + " за " + MoneyUtils.formatMoney(e.company.getPrice()));
             updatePhaseAndButtons();
         }));
 
         bus.on(CompanyBought.class, e -> Platform.runLater(() -> {
-            appendLog("\uD83D\uDCB0 " + e.buyer.getName() + " купил " + e.company.getName() + " за $" + e.price);
+            appendLog("\uD83D\uDCB0 " + e.buyer.getName() + " купил " + e.company.getName() + " за " + MoneyUtils.formatMoney(e.price));
             updatePlayersLabel();
             int idx = indexOfTile(e.company);
             if (idx >= 0 && e.buyer != null) {
@@ -173,14 +179,14 @@ public class GameController {
         }));
 
         bus.on(RentPaid.class, e -> Platform.runLater(() -> {
-            appendLog(String.format("\uD83D\uDCB8 %s платит аренду $%d игроку %s (%s)",
-                    e.from.getName(), e.amount, e.to.getName(), e.subject));
+            appendLog(String.format("\uD83D\uDCB8 %s платит аренду %s игроку %s (%s)",
+                    e.from.getName(), MoneyUtils.formatMoney(e.amount), e.to.getName(), e.subject));
             updatePlayersLabel();
             updatePhaseAndButtons();
         }));
 
         bus.on(TaxPaid.class, e -> Platform.runLater(() -> {
-            appendLog("\uD83D\uDCB8 " + e.player.getName() + " платит налог $" + e.amount);
+            appendLog("\uD83D\uDCB8 " + e.player.getName() + " платит налог " + MoneyUtils.formatMoney(e.amount));
             updatePlayersLabel();
             updatePhaseAndButtons();
         }));
@@ -295,7 +301,7 @@ public class GameController {
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             String marker = (i == engine.getCurrentIndex()) ? "▶ " : "";
-            sb.append(marker).append(p.getName()).append(" $").append(p.getBalance()).append("K");
+            sb.append(marker).append(p.getName()).append(" ").append(MoneyUtils.formatMoney(p.getBalance()));
             if (p.isInJail()) sb.append(" [В ТЮРЬМЕ]");
             if (i < players.size() - 1) sb.append("  |  ");
         }
@@ -398,7 +404,7 @@ public class GameController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Игра окончена!");
         alert.setHeaderText("Победитель: " + winner.getName());
-        alert.setContentText("Баланс: $" + winner.getBalance());
+        alert.setContentText("Баланс: " + MoneyUtils.formatMoney(winner.getBalance()));
         alert.showAndWait();
     }
 }

@@ -8,6 +8,7 @@ import com.krchvl.MonopolyGame.core.tiles.CompanyTileGroup;
 import com.krchvl.MonopolyGame.core.tiles.Tile;
 import com.krchvl.MonopolyGame.fx.util.ImageCache;
 import com.krchvl.MonopolyGame.fx.util.ImageUtils;
+import com.krchvl.MonopolyGame.fx.util.MoneyUtils;
 import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -337,7 +338,7 @@ public final class BoardView {
                     "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.30), 2, 0, 0, 1);");
 
             if (companyTile.getPrice() > 0) {
-                Label priceLabel = new Label("$" + companyTile.getPrice());
+                Label priceLabel = new Label(MoneyUtils.formatMoney(companyTile.getPrice()));
                 double fontSize = Math.max(9, Math.min(12, h * 0.14));
                 priceLabel.setStyle("-fx-font-size: " + fontSize + "px;" +
                         "-fx-font-weight: bold;" +
