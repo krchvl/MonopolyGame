@@ -38,14 +38,14 @@ public final class DefaultBoards {
         b.addTile(new TaxTile("Подоходный налог", 150)); // 19
 
         b.addTile(new CompanyTile("Лукойл", "/images/companies/lukoil.png", 260, 35, CompanyTileGroup.YELLOW));
+
+        b.addTile(new CompanyTile("Азбука вкуса", "/images/companies/azbuka_vkusa.png", 180, 20, CompanyTileGroup.PINK));
+
         b.addTile(new CompanyTile("Роснефть", "/images/companies/rosneft.png", 280, 40, CompanyTileGroup.YELLOW));
 
         b.addTile(new CompanyTile("Rostic's", "/images/companies/rostics.png", 220, 26, CompanyTileGroup.ORANGE));
 
-        b.addTile(new JailTile("Тюрьма"));
-
-        // Дубликат Перекрестка в конце? Сделаем его дорогим "Розовым" активом
-        b.addTile(new CompanyTile("Перекрёсток (VIP)", "/images/companies/perekrestok.png", 240, 30, CompanyTileGroup.PINK));
+        b.addTile(new UtilityTile("Google Россия", "/images/companies/google.png", 200));
 
         return b;
     }
