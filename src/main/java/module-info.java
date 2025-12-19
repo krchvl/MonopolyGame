@@ -3,6 +3,7 @@ module com.krchvl.MonopolyGame {
     requires javafx.fxml;
 
     opens com.krchvl.MonopolyGame.fx to javafx.fxml;
+    opens com.krchvl.MonopolyGame.fx.setup to javafx.fxml;
 
     exports com.krchvl.MonopolyGame.fx;
 }

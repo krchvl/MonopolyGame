@@ -6,7 +6,7 @@ import com.krchvl.MonopolyGame.core.engine.GameContext;
 import com.krchvl.MonopolyGame.core.engine.events.RentPaid;
 
 public class CompanyTile extends Tile implements CompanyLike {
-    private final int price;
+    private int price;
     private final int baseRent;
     private final CompanyTileGroup group;
     private Player owner;
@@ -61,6 +61,11 @@ public class CompanyTile extends Tile implements CompanyLike {
     }
 
     public int getPrice() { return price; }
+    public void setPrice(int price) {
+        if (price < 0) throw new IllegalArgumentException("price < 0");
+        this.price = price;
+    }
+
     public int getBaseRent() { return baseRent; }
     public CompanyTileGroup getGroup() { return group; }
 

@@ -12,6 +12,9 @@ import com.krchvl.MonopolyGame.fx.util.ImageCache;
 import com.krchvl.MonopolyGame.fx.util.MoneyUtils;
 import com.krchvl.MonopolyGame.fx.view.BoardView;
 import com.krchvl.MonopolyGame.fx.view.TileContextMenu;
+import com.krchvl.MonopolyGame.fx.setup.NewGameDialog;
+import com.krchvl.MonopolyGame.fx.setup.NewGameSettings;
+import com.krchvl.MonopolyGame.fx.setup.NewGameSettings.PlayerCfg;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -63,41 +66,84 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        initGame();
-    }
-
-    public void initGame() {
-        bus = new EventBus();
-        board = DefaultBoards.sampleClassicLikeBoard();
-
-        List<Player> players = Arrays.asList(
-                new Player("Игрок 1", PlayerGroup.RED),
-                new Player("Bot JOHN", PlayerGroup.GREEN),
-                new Player("Bot BON", PlayerGroup.LIGHT_BLUE)
-        );
-        Map<Player, PlayerController> controllers = new HashMap<>();
-        controllers.put(players.get(0), new HumanController());
-        controllers.put(players.get(1), new BotController(200));
-        controllers.put(players.get(2), new BotController(200));
-
-        engine = new GameEngine(board, players, controllers, bus);
-
-        visualPos.clear();
-        players.forEach(p -> visualPos.put(p, p.getPosition()));
-
-        boardView = new BoardView(board, imageCache, PLAYER_COLORS, GROUP_COLORS, this::onTileClicked);
-        boardView.bindTo(boardPane);
-
+        // Листенеры размеров — можно повесить заранее
         boardPane.widthProperty().addListener((o, ov, nv) -> Platform.runLater(this::refreshBoardLayers));
         boardPane.heightProperty().addListener((o, ov, nv) -> Platform.runLater(this::refreshBoardLayers));
 
-        ownedByIndex.clear();
-
-        subscribeEvents();
-        updateHeader();
         setButtonsState(false, false, false);
+        updateHeader();
+
+        // Показать диалог новой игры после инициализации UI
+        Platform.runLater(() -> startNewGameWithDialog(true));
+    }
+
+    private void startNewGameWithDialog(boolean firstLaunch) {
+        Board baseBoard = DefaultBoards.sampleClassicLikeBoard();
+        List<PlayerCfg> defaults = Arrays.asList(
+                new PlayerCfg("Игрок 1", PlayerGroup.RED, false, 0),
+                new PlayerCfg("Bot JOHN", PlayerGroup.GREEN, true, 200),
+                new PlayerCfg("Bot BON", PlayerGroup.LIGHT_BLUE, true, 200)
+        );
+
+        NewGameDialog dlg = new NewGameDialog(baseBoard, defaults);
+        var owner = boardRoot != null && boardRoot.getScene() != null ? boardRoot.getScene().getWindow() : null;
+        var res = dlg.show(owner);
+
+        if (res.isEmpty()) {
+            if (firstLaunch) Platform.exit();
+            return;
+        }
+        startGame(res.get());
+    }
+
+    private void startGame(NewGameSettings settings) {
+        // Остановка старых анимаций/меню (если были)
+        if (moveAnim != null && moveAnim.isRunning()) moveAnim.stop();
+        if (diceOverlay != null && diceOverlay.isRunning()) diceOverlay.stop();
+        if (monopolyMenu != null) monopolyMenu.hide();
+
+        // Сброс UI
+        logArea.clear();
+        ownedByIndex.clear();
+        visualPos.clear();
+        autoEndScheduled = false;
+
+        // Новые объекты игры
+        bus = new EventBus();
+        board = DefaultBoards.sampleClassicLikeBoard();
+
+        // Применяем изменения цен и стартовых звёзд ДО старта игры
+        settings.getPriceOverrides().forEach((idx, price) -> {
+            Tile t = board.getTile(idx);
+            if (t instanceof CompanyTile ct) {
+                ct.setPrice(price); // требуется сеттер в CompanyTile
+            }
+        });
+        settings.getInitialStars().forEach((idx, stars) -> {
+            Tile t = board.getTile(idx);
+            if (t instanceof CompanyTile ct) {
+                ct.setStars(stars); // безопасно до старта
+            }
+        });
+
+        // Игроки и контроллеры
+        List<Player> players = new ArrayList<>();
+        Map<Player, PlayerController> controllers = new HashMap<>();
+        for (PlayerCfg pc : settings.getPlayers()) {
+            Player p = new Player(pc.name, pc.color);
+            players.add(p);
+            controllers.put(p, pc.bot ? new BotController(pc.botReserve) : new HumanController());
+            visualPos.put(p, p.getPosition());
+        }
+
+        engine = new GameEngine(board, players, controllers, bus);
+
+        // BoardView и оверлеи
+        boardView = new BoardView(board, imageCache, PLAYER_COLORS, GROUP_COLORS, this::onTileClicked);
+        boardView.bindTo(boardPane);
 
         refreshBoardLayers();
+        renderTokens();
 
         moveAnim = new MovementAnimator(
                 board.size(),
@@ -106,6 +152,12 @@ public class GameController {
                 idx -> boardView.addLandingEffect(idx)
         );
         diceOverlay = new DiceOverlay(boardRoot, DiceUtils::parseDiceValues, v -> dieChar(v));
+
+        // Подписка на события
+        subscribeEvents();
+
+        updateHeader();
+        setButtonsState(false, false, false);
 
         Platform.runLater(engine::start);
     }
@@ -258,9 +310,7 @@ public class GameController {
         Tile tile = board.getTile(index);
         if (!(tile instanceof CompanyTile companyTile)) return;
 
-        if (monopolyMenu != null) {
-            monopolyMenu.hide();
-        }
+        if (monopolyMenu != null) monopolyMenu.hide();
 
         monopolyMenu = new TileContextMenu(engine).build(companyTile);
         monopolyMenu.setAutoHide(true);
@@ -369,30 +419,25 @@ public class GameController {
 
     @FXML
     private void onRollDice() {
-        engine.roll();
+        if (engine != null) engine.roll();
         setButtonsState(false, false, false);
     }
 
     @FXML
     private void onBuyProperty() {
-        engine.buy();
+        if (engine != null) engine.buy();
         setButtonsState(false, false, false);
     }
 
     @FXML
     private void onPassPurchase() {
-        engine.pass();
+        if (engine != null) engine.pass();
         setButtonsState(false, false, false);
     }
 
     @FXML
     private void onRestart() {
-        if (moveAnim != null && moveAnim.isRunning()) moveAnim.stop();
-        if (diceOverlay != null && diceOverlay.isRunning()) diceOverlay.stop();
-        if (monopolyMenu != null) monopolyMenu.hide();
-
-        logArea.clear();
-        initGame();
+        startNewGameWithDialog(false);
     }
 
     @FXML

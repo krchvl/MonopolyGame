@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.krchvl.MonopolyGame.fx.setup.NewGameDialogController"
+            prefWidth="760" prefHeight="520">
+
+    <headerText>Новая игра — настройки</headerText>
+
+    <content>
+        <TabPane>
+            <tabs>
+                <Tab text="Игроки" closable="false">
+                    <content>
+                        <BorderPane>
+                            <center>
+                                <TableView fx:id="playersTable" editable="true">
+                                    <columns>
+                                        <TableColumn fx:id="colType" text="Тип" prefWidth="100"/>
+                                        <TableColumn fx:id="colName" text="Имя" prefWidth="200"/>
+                                        <TableColumn fx:id="colColor" text="Цвет" prefWidth="140"/>
+                                        <TableColumn fx:id="colReserve" text="Резерв бота" prefWidth="140"/>
+                                    </columns>
+                                </TableView>
+                            </center>
+                            <bottom>
+                                <HBox spacing="8">
+                                    <children>
+                                        <Button text="Добавить человека" onAction="#onAddHuman"/>
+                                        <Button text="Добавить бота" onAction="#onAddBot"/>
+                                        <Button text="Удалить выбранного" onAction="#onRemoveSelected"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Button text="Вверх" onAction="#onMoveUp"/>
+                                        <Button text="Вниз" onAction="#onMoveDown"/>
+                                    </children>
+                                    <padding>
+                                        <Insets top="10" right="10" bottom="10" left="10"/>
+                                    </padding>
+                                </HBox>
+                            </bottom>
+                        </BorderPane>
+                    </content>
+                </Tab>
+
+                <Tab text="Плитки" closable="false">
+                    <content>
+                        <BorderPane>
+                            <center>
+                                <TableView fx:id="tilesTable" editable="true">
+                                    <columns>
+                                        <TableColumn fx:id="colIdx" text="#" prefWidth="50"/>
+                                        <TableColumn fx:id="colTName" text="Название" prefWidth="220"/>
+                                        <TableColumn fx:id="colTypeName" text="Тип" prefWidth="120"/>
+                                        <TableColumn fx:id="colGroup" text="Группа" prefWidth="120"/>
+                                        <TableColumn fx:id="colPrice" text="Цена" prefWidth="100"/>
+                                        <TableColumn fx:id="colStars" text="Стартовые звезды" prefWidth="160"/>
+                                    </columns>
+                                </TableView>
+                            </center>
+                            <bottom>
+                                <HBox spacing="8">
+                                    <children>
+                                        <Button text="Сбросить изменения" onAction="#onResetTiles"/>
+                                        <Label text="Подсказка: редактируются Цена (для компаний) и Старты (только для компаний)."/>
+                                    </children>
+                                    <padding>
+                                        <Insets top="10" right="10" bottom="10" left="10"/>
+                                    </padding>
+                                </HBox>
+                            </bottom>
+                        </BorderPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </content>
+
+    <buttonTypes>
+        <ButtonType fx:constant="OK"/>
+        <ButtonType fx:constant="CANCEL"/>
+    </buttonTypes>
+</DialogPane>
