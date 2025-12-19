@@ -6,14 +6,14 @@ import com.krchvl.MonopolyGame.core.engine.GameEngine;
 import com.krchvl.MonopolyGame.core.tiles.CompanyTile;
 import com.krchvl.MonopolyGame.core.tiles.Tile;
 
-import static com.krchvl.MonopolyGame.core.engine.GameEngine.Phase;
-
 public class BotController implements PlayerController {
     private final int reserve;
 
     private static final int BASE_STEP_DURATION = 200;
     private static final int MAX_DICE_ROLL = 12;
-    private static final int THINKING_TIME = 800;
+    private static final int THINKING_TIME = 600;
+
+    private volatile boolean boughtThisTurn = false;
 
     public BotController(int reserve) { this.reserve = reserve; }
 
@@ -21,10 +21,14 @@ public class BotController implements PlayerController {
 
     @Override
     public void onPhase(GameEngine engine) {
-        Phase ph = engine.getPhase();
+        GameEngine.Phase ph = engine.getPhase();
 
         switch (ph) {
             case AWAITING_ROLL:
+                boughtThisTurn = false;
+                delayThen(THINKING_TIME, engine::roll);
+                break;
+
             case AWAITING_ROLL_AGAIN:
                 delayThen(THINKING_TIME, engine::roll);
                 break;
@@ -45,6 +49,12 @@ public class BotController implements PlayerController {
 
     private void tryUpgradeOrEndTurn(GameEngine engine) {
         delayThen(600, () -> {
+            if (boughtThisTurn) {
+                boughtThisTurn = false;
+                engine.endTurn();
+                return;
+            }
+
             CompanyTile tileToUpgrade = findTileToUpgrade(engine);
 
             if (tileToUpgrade != null) {
@@ -78,6 +88,7 @@ public class BotController implements PlayerController {
         CompanyTile prop = engine.getPendingPurchase();
         Player p = engine.current();
         if (prop != null && p.getBalance() - prop.getPrice() >= reserve) {
+            boughtThisTurn = true;
             engine.buy();
         } else {
             engine.pass();
