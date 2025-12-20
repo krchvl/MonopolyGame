@@ -1,5 +1,6 @@
 package com.krchvl.MonopolyGame.fx.setup;
 
+import com.krchvl.MonopolyGame.core.Board;
 import com.krchvl.MonopolyGame.core.PlayerGroup;
 
 import java.util.*;
@@ -27,7 +28,11 @@ public class NewGameSettings {
 
     private final Map<Integer, Integer> initialStars = new HashMap<>();
 
+    private Board boardTemplate;
+
     public List<PlayerCfg> getPlayers() { return players; }
     public Map<Integer, Integer> getPriceOverrides() { return priceOverrides; }
     public Map<Integer, Integer> getInitialStars() { return initialStars; }
+    public Board getBoardTemplate() { return boardTemplate; }
+    public void setBoardTemplate(Board boardTemplate) { this.boardTemplate = boardTemplate; }
 }

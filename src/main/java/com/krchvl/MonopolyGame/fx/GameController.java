@@ -35,6 +35,8 @@ import static com.krchvl.MonopolyGame.fx.theme.Theme.GROUP_COLORS;
 import static com.krchvl.MonopolyGame.fx.theme.Theme.PLAYER_COLORS;
 import static com.krchvl.MonopolyGame.fx.util.DiceUtils.dieChar;
 
+import java.util.function.Supplier;
+
 public class GameController {
 
     @FXML
@@ -64,21 +66,22 @@ public class GameController {
     private final Map<Integer, PlayerGroup> ownedByIndex = new HashMap<>();
     private ContextMenu monopolyMenu;
 
+    private Supplier<Board> boardSupplier = DefaultBoards::testStarsBoard;
+
     @FXML
     public void initialize() {
-        // Листенеры размеров — можно повесить заранее
         boardPane.widthProperty().addListener((o, ov, nv) -> Platform.runLater(this::refreshBoardLayers));
         boardPane.heightProperty().addListener((o, ov, nv) -> Platform.runLater(this::refreshBoardLayers));
 
         setButtonsState(false, false, false);
         updateHeader();
 
-        // Показать диалог новой игры после инициализации UI
         Platform.runLater(() -> startNewGameWithDialog(true));
     }
 
     private void startNewGameWithDialog(boolean firstLaunch) {
-        Board baseBoard = DefaultBoards.sampleClassicLikeBoard();
+        Board baseBoard = boardSupplier.get();
+
         List<PlayerCfg> defaults = Arrays.asList(
                 new PlayerCfg("Игрок 1", PlayerGroup.RED, false, 0),
                 new PlayerCfg("Bot JOHN", PlayerGroup.GREEN, true, 200),
@@ -97,36 +100,35 @@ public class GameController {
     }
 
     private void startGame(NewGameSettings settings) {
-        // Остановка старых анимаций/меню (если были)
         if (moveAnim != null && moveAnim.isRunning()) moveAnim.stop();
         if (diceOverlay != null && diceOverlay.isRunning()) diceOverlay.stop();
         if (monopolyMenu != null) monopolyMenu.hide();
 
-        // Сброс UI
         logArea.clear();
         ownedByIndex.clear();
         visualPos.clear();
         autoEndScheduled = false;
 
-        // Новые объекты игры
         bus = new EventBus();
-        board = DefaultBoards.sampleClassicLikeBoard();
 
-        // Применяем изменения цен и стартовых звёзд ДО старта игры
+        board = settings.getBoardTemplate();
+        if (board == null) {
+            board = boardSupplier.get();
+        }
+
         settings.getPriceOverrides().forEach((idx, price) -> {
             Tile t = board.getTile(idx);
             if (t instanceof CompanyTile ct) {
-                ct.setPrice(price); // требуется сеттер в CompanyTile
+                ct.setPrice(price);
             }
         });
         settings.getInitialStars().forEach((idx, stars) -> {
             Tile t = board.getTile(idx);
             if (t instanceof CompanyTile ct) {
-                ct.setStars(stars); // безопасно до старта
+                ct.setStars(stars);
             }
         });
 
-        // Игроки и контроллеры
         List<Player> players = new ArrayList<>();
         Map<Player, PlayerController> controllers = new HashMap<>();
         for (PlayerCfg pc : settings.getPlayers()) {
@@ -138,7 +140,6 @@ public class GameController {
 
         engine = new GameEngine(board, players, controllers, bus);
 
-        // BoardView и оверлеи
         boardView = new BoardView(board, imageCache, PLAYER_COLORS, GROUP_COLORS, this::onTileClicked);
         boardView.bindTo(boardPane);
 
@@ -153,9 +154,7 @@ public class GameController {
         );
         diceOverlay = new DiceOverlay(boardRoot, DiceUtils::parseDiceValues, v -> dieChar(v));
 
-        // Подписка на события
         subscribeEvents();
-
         updateHeader();
         setButtonsState(false, false, false);
 

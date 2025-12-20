@@ -186,7 +186,6 @@ public class NewGameDialogController {
                     pr.name.get(), pr.color.get(), pr.bot.get(), pr.reserve.get()
             ));
         }
-
         for (TileRow tr : tileRows) {
             if (tr.priceEditable.get() && tr.price.get() != tr.originalPrice) {
                 settings.getPriceOverrides().put(tr.index.get(), tr.price.get());
@@ -195,6 +194,8 @@ public class NewGameDialogController {
                 settings.getInitialStars().put(tr.index.get(), tr.stars.get());
             }
         }
+
+        settings.setBoardTemplate(sourceBoard);
 
         return settings;
     }
